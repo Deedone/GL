@@ -6,6 +6,7 @@
 #include <linux/wait.h>
 #include <linux/jiffies.h>
 #include <linux/timer.h>
+#include <linux/errno.h>
 
 
 
@@ -21,7 +22,7 @@ void timer_fn(struct timer_list* arg){
 
     pr_err("Timer fired");
 
-    mod_timer(arg,jiffies+delay);
+    mod_timer(arg, jiffies+delay);
 }
 
 static int __init hello_init(void)
@@ -29,6 +30,7 @@ static int __init hello_init(void)
     delay = msecs_to_jiffies(1000);
     
     timer = (struct timer_list*)kmalloc(sizeof(struct timer_list),GFP_KERNEL);
+    if(!timer) return -ENOMEM;
     timer->expires = jiffies+delay;
 
 
@@ -37,11 +39,11 @@ static int __init hello_init(void)
 
 
     return 0;
+
 }
 
 static void __exit hello_exit(void)
 {
-    /* Do nothing here right now */
     del_timer(timer);
     kfree(timer);
 }
