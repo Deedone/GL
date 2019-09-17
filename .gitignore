@@ -9,3 +9,5 @@
 *.mod.o
 *.swp
 *.cmd
+
+.vscode/
