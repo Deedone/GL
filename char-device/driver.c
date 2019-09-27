@@ -67,7 +67,6 @@ static int ring_write(struct ddone_device *ddev, char** buf, size_t *count){
 	while((ddev->w + 1) % BUF_SIZE == ddev->r){//If buffer full
 		mutex_unlock(&ddev->mutex);
 		err = wait_event_interruptible(ddev->wq,(ddev->w + 1) % BUF_SIZE != ddev->r);
-		pr_err("Wait event return = %d",err);
 		if(err){
 			*count = 0;
 			mutex_lock(&ddev->mutex);
@@ -132,7 +131,6 @@ static void ring_read(struct ddone_device *ddev, char** buf, size_t *count){
 	while(ddev->r == ddev->w){//Wait for new data
 		mutex_unlock(&ddev->mutex);
 		err = wait_event_interruptible(ddev->rq,ddev->r != ddev->w);
-		pr_err("Wait event return = %d",err);
 		if(err){
 			*count = 0;
 			mutex_lock(&ddev->mutex);//To prevent mutex unlock errors later
@@ -252,7 +250,6 @@ static void device_try_write_to(struct ddone_device *ddev){
 
 	if(flags & DATA_READY)
 		return;
-	pr_err("Flags %u size %lu\n",flags,size);
 
 	ring_read(ddev,&start,&size);
 
@@ -319,8 +316,6 @@ static void device_work_f(struct work_struct *work){
 
 	ddev = container_of(work,struct ddone_device,dwork.work);
 	mutex_lock(&ddev->mutex);
-	//pr_err("Work %d",MINOR(ddev->dev));
-	pr_err("Bytes to write %d\n",ddev->bytes_to_write);
 	if(ddev->bytes_to_write > 0){
 		device_try_write_to(ddev);
 	}else{
@@ -372,7 +367,7 @@ static int device_probe(struct platform_device *pdev){
 
 
 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-	pr_err("Res = %p\n",res);
+	pr_info("Res = %p\n",res);
 	ddev->mem_size = res->end - res->start;
 	ddev->mem = devm_ioremap_resource(&pdev->dev,res);
 	if(IS_ERR(ddev->mem)){
@@ -381,23 +376,19 @@ static int device_probe(struct platform_device *pdev){
 	}
 
 	res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
-	pr_err("Res = %p\n",res);
+	pr_info("Res = %p\n",res);
 	ddev->regs = devm_ioremap_resource(&pdev->dev,res);
 	if(IS_ERR(ddev->regs)){
 		err = PTR_ERR(ddev->regs);
 		goto fail;
 	}
 
-
-
-	pr_info("Addr of pdev is %p\n",pdev);
-
 	if(DEV_MINOR == DEVICE_COUNT){
 		err = -ENODEV;
 		goto fail;
 	}
 	ddev->dev = MKDEV(DEV_MAJOR,DEV_MINOR++);
-	pr_err("Device major %d, minor %d\n",MAJOR(ddev->dev),MINOR(ddev->dev));
+	pr_info("Device major %d, minor %d\n",MAJOR(ddev->dev),MINOR(ddev->dev));
 
 
 	cdev_init(&ddev->cdev, &fops);
