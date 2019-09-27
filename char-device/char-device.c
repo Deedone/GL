@@ -9,16 +9,17 @@
 
 
 
-static int __init chardev_init(void){
+static int __init chardev_init(void)
+{
 	int err;
 
 	err = setup_devices();
-	if(err){
+	if (err) {
 		pr_err("Error setting up devices");
 		return err;
 	}
 	err = setup_driver();
-	if(err){
+	if (err) {
 		pr_err("Error setting up driver");
 		remove_devices();
 		return err;
@@ -29,7 +30,8 @@ static int __init chardev_init(void){
 	return 0;
 }
 
-static void __exit chardev_exit(void){
+static void __exit chardev_exit(void)
+{
 	remove_driver();
 	remove_devices();
 
